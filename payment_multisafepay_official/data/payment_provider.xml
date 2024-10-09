@@ -3,28 +3,11 @@
     <data noupdate="1">
         <record id="payment_acquirer_multisafepay" model="payment.provider">
             <field name="name">MultiSafepay</field>
-            <field name="display_as">MultiSafepay</field>
             <field name="code">multisafepay</field>
             <field name="image_128" type="base64" file="payment_multisafepay_official/static/src/img/multisafepay_icon.png"/>
             <field name="company_id" ref="base.main_company"/>
             <field name="module_id" ref="base.module_payment_multisafepay_official"/>
             <field name="redirect_form_view_id" ref="multisafepay_form"/>
-            <field name="payment_icon_ids" eval="[(6, 0, [
-                ref('payment.payment_icon_cc_visa'),
-                ref('payment.payment_icon_cc_american_express'),
-                ref('payment.payment_icon_cc_maestro'),
-                ref('payment.payment_icon_cc_mastercard'),
-                ref('payment.payment_icon_cc_bancontact'),
-                ref('payment.payment_icon_cc_eps'),
-                ref('payment.payment_icon_cc_giropay'),
-                ref('payment.payment_icon_cc_p24'),
-                ref('payment.payment_icon_cc_ideal'),
-                ref('payment.payment_icon_paypal'),
-                ref('payment.payment_icon_apple_pay'),
-                ref('payment.payment_icon_sepa'),
-                ref('payment.payment_icon_kbc')
-            ])]"/>
-            <field name="support_fees">False</field>
             <field name="support_refund"></field>
             <field name="support_tokenization">False</field>
         </record>

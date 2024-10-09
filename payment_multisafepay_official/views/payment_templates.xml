@@ -1,211 +1,29 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
     <template id="multisafepay_form">
-        <input type="hidden" name="data_set" t-att-data-action-url="tx_url" data-remove-me=""/>
-        <input type="hidden" name="order_reference" t-att-value="order_reference"/>
-        <input type="hidden" name="currency" t-att-value="currency"/>
-        <input type="hidden" name="amount" t-att-value="amount"/>
-        <input type="hidden" name="lang" t-att-value="lang"/>
-        <input type="hidden" name="first_name" t-att-value="first_name"/>
-        <input type="hidden" name="last_name" t-att-value="last_name"/>
-        <input type="hidden" name="address" t-att-value="address"/>
-        <input type="hidden" name="address2" t-att-value="address2"/>
-        <input type="hidden" name="zip_code" t-att-value="zip_code"/>
-        <input type="hidden" name="city" t-att-value="city"/>
-        <input type="hidden" name="country" t-att-value="country"/>
-        <input type="hidden" name="phone" t-att-value="phone"/>
-        <input type="hidden" name="email" t-att-value="email"/>
-        <input type="hidden" name="base_url" t-att-value="base_url"/>
-        <input name="provider_id" t-att-value="provider_id"/>
-        <input name="payment_method" t-att-value="payment_method"/>
-        <input name="issuer" t-att-value="issuer_id"/>
-        <input name="website" t-att-value="website_id"/>
+        <form t-att-action="tx_url" method="post">
+            <input type="hidden" name="data_set" t-att-data-action-url="tx_url" data-remove-me=""/>
+            <input type="hidden" name="order_reference" t-att-value="order_reference"/>
+            <input type="hidden" name="sale_order_id" t-att-value="sale_order_id"/>
+            <input type="hidden" name="invoice_id" t-att-value="invoice_id"/>
+            <input type="hidden" name="currency" t-att-value="currency"/>
+            <input type="hidden" name="amount" t-att-value="amount"/>
+            <input type="hidden" name="lang" t-att-value="lang"/>
+            <input type="hidden" name="first_name" t-att-value="first_name"/>
+            <input type="hidden" name="last_name" t-att-value="last_name"/>
+            <input type="hidden" name="address" t-att-value="address"/>
+            <input type="hidden" name="address2" t-att-value="address2"/>
+            <input type="hidden" name="zip_code" t-att-value="zip_code"/>
+            <input type="hidden" name="city" t-att-value="city"/>
+            <input type="hidden" name="country" t-att-value="country"/>
+            <input type="hidden" name="phone" t-att-value="phone"/>
+            <input type="hidden" name="email" t-att-value="email"/>
+            <input type="hidden" name="base_url" t-att-value="base_url"/>
+            <input name="provider_id" t-att-value="provider_id"/>
+            <input name="payment_method" t-att-value="payment_method"/>
+            <input name="issuer" t-att-value="issuer_id"/>
+            <input name="website" t-att-value="website_id"/>
+        </form>
     </template>
 
-    <template id="multisafepay_payment_method_list" name="MultiSafepay payment methods list">
-        <input type="hidden" t-if="invoice_id" name="invoice_id" t-att-value="invoice_id"/>
-        <t t-if="invoice" t-set="payment_methods"
-           t-value="multisafepay_provider.get_appropriate_payment_methods(invoice.amount_residual, invoice.currency_id, invoice.partner_id)"/>
-        <t t-elif="sale_order" t-set="payment_methods"
-           t-value="multisafepay_provider.get_appropriate_payment_methods(sale_order.amount_total, sale_order.currency_id, sale_order.partner_invoice_id)"/>
-        <t t-elif="website_sale_order" t-set="payment_methods"
-           t-value="multisafepay_provider.get_appropriate_payment_methods(website_sale_order.amount_total, website_sale_order.currency_id, website_sale_order.partner_invoice_id)"/>
-        <t t-else="" t-set="payment_methods"
-           t-value="multisafepay_provider.get_appropriate_payment_methods(amount, currency, partner)"/>
-        <t t-set="payment_methods_count" t-value="len(payment_methods) if payment_methods else 0"/>
-        <t t-set="cc_payment_methods" t-value="list(filter(lambda pm: pm.is_credit_card, payment_methods))"/>
-        <t t-set="ideal_issuers" t-value="multisafepay_provider.get_ideal_issuers()"/>
-        <t t-foreach="payment_methods" t-as="payment_method">
-            <t t-if="not payment_method.is_credit_card">
-                <div class="card-body">
-                    <label>
-                        <input type="radio" t-att-data-payment-method-id="payment_method.id"
-                               t-att-data-form-payment="true"
-                               t-att-data-multisafepay-aq="payment_method.id"
-                               name="multisafepay_pm_id" t-attf-value="form_{{payment_method.id}}"
-                               t-att-data-issuer-id="ideal_issuers[0].get('code') if payment_method.title == 'IDEAL' else ''"
-                               t-att-data-ideal-issuer="'true' if payment_method.title == 'IDEAL' else 'false'"
-                        />
-                        <span t-field="payment_method.image_payment_form" t-att-title="payment_method.name"
-                              t-options='{"widget": "image", "alt-field": "name"}'>
-                        </span>
-                        <span class="payment_method_name" t-esc="payment_method.name"/>
-                        <span class="payment_method_name">(powered by MultiSafepay)</span>
-
-                        <t t-if="payment_method.title == 'IDEAL'">
-                            <t t-if="len(ideal_issuers)">
-                                <select name="ideal_issuer_id" class="btn border-dark" t-att-hidden="true">
-                                    <t t-foreach="ideal_issuers" t-as="ideal_issuer">
-                                        <option t-att-value="ideal_issuer.get('code')">
-                                            <t t-esc="ideal_issuer.get('description')"/>
-                                        </option>
-                                    </t>
-                                </select>
-                            </t>
-                        </t>
-
-                    </label>
-                </div>
-            </t>
-        </t>
-        <t t-if="cc_payment_methods">
-            <div class="card-body">
-                <label>
-                    <input type="radio" t-att-data-payment-method-id="cc_payment_methods[0].id"
-                           t-att-data-form-payment="true"
-                           t-att-data-multisafepay-aq="cc_payment_methods[0].id"
-                           t-attf-value="form_{{cc_payment_methods[0].id}}"
-                           name="multisafepay_pm_id" data-credit-card="true"/>
-                    <span class="payment_method_name">Credit card (powered by MultiSafepay)</span>
-                    <select name="cc_multisafepay_pm_id" class="btn border-dark" t-att-hidden="true">
-                        <t t-foreach="cc_payment_methods" t-as="cc_payment_method">
-                            <option t-att-value="cc_payment_method.id">
-                                <t t-esc="cc_payment_method.name"/>
-                            </option>
-                        </t>
-                    </select>
-                </label>
-            </div>
-        </t>
-    </template>
-
-    <template id="multisafepay_payment_checkout" name="MultSafepay payment checkout"
-              inherit_id="payment.checkout">
-        <xpath expr="//form/div[1]" position="replace">
-            <div class="card">
-                <t t-set="multisafepay_provider" t-value="False"/>
-                <!-- === Providers === -->
-                <t t-foreach="providers" t-as="provider">
-                    <t t-if="provider.code == 'multisafepay'">
-                        <t t-set="multisafepay_provider" t-value="provider"/>
-                    </t>
-                    <div name="o_payment_option_card" t-attf-class="card-body #{'d-none' if provider.code == 'multisafepay' else ''} o_payment_option_card">
-                        <label>
-                            <!-- === Radio button === -->
-                            <!-- Only shown if linked to the only payment option -->
-                            <input name="o_payment_radio"
-                                   type="radio"
-                                   t-att-class="'' if provider_count + token_count > 1 else 'd-none'"
-                                   t-att-data-payment-option-id="provider.id"
-                                   t-att-data-provider="provider.code"
-                                   data-payment-option-type="provider"/>
-                            <!-- === Provider name === -->
-                            <span class="payment_option_name">
-                                <b t-esc="provider.display_as or provider.name"/>
-                            </span>
-                            <!-- === "Test Mode" badge === -->
-                            <span t-if="provider.state == 'test'"
-                                  class="badge rounded-pill text-bg-warning ms-1">
-                                Test Mode
-                            </span>
-                            <!-- === "Unpublished" badge === -->
-                            <span t-if="not provider.is_published"
-                                  class="badge rounded-pill text-bg-danger ms-1">
-                                Unpublished
-                            </span>
-                            <!-- === Extra fees badge === -->
-                            <t t-if="fees_by_provider.get(provider)">
-                                <span class="badge rounded-pill text-bg-secondary ms-1">
-                                    + <t t-esc="fees_by_provider.get(provider)"
-                                         t-options="{'widget': 'monetary', 'display_currency': currency}"/>
-                                    Fees
-                                </span>
-                            </t>
-                        </label>
-                        <!-- === Payment icon list === -->
-                        <t t-call="payment.icon_list" t-if="provider.code!='multisafepay'"/>
-                        <!-- === Help message === -->
-                        <div t-if="not is_html_empty(provider.pre_msg)"
-                             t-out="provider.pre_msg"
-                             class="text-muted ms-3"/>
-                    </div>
-                    <!-- === Provider inline form === -->
-                    <div t-attf-id="o_payment_provider_inline_form_{{provider.id}}"
-                         name="o_payment_inline_form"
-                         class="card-footer px-3 d-none">
-                        <t t-if="provider.sudo()._should_build_inline_form(is_validation=False)">
-                            <t t-set="inline_form_xml_id"
-                               t-value="provider.sudo().inline_form_view_id.xml_id"/>
-                            <!-- === Inline form content (filled by provider) === -->
-                            <div t-if="inline_form_xml_id" class="clearfix">
-                                <t t-call="{{inline_form_xml_id}}">
-                                    <t t-set="provider_id" t-value="provider.id"/>
-                                </t>
-                            </div>
-                        </t>
-                        <!-- === "Save my payment details" checkbox === -->
-                        <label t-if="show_tokenize_input[provider.id]">
-                            <input name="o_payment_save_as_token" type="checkbox"/>
-                            Save my payment details
-                        </label>
-                    </div>
-                </t>
-                <t t-if="multisafepay_provider">
-                    <t t-call="payment_multisafepay_official.multisafepay_payment_method_list"/>
-                </t>
-                <!-- === Tokens === -->
-                <t t-foreach="tokens" t-as="token">
-                    <div name="o_payment_option_card" class="card-body o_payment_option_card">
-                        <label>
-                            <!-- === Radio button === -->
-                            <input name="o_payment_radio"
-                                   type="radio"
-                                   t-att-checked="token.id == default_payment_option_id"
-                                   t-att-data-payment-option-id="token.id"
-                                   t-att-data-provider="token.provider_code"
-                                   data-payment-option-type="token"/>
-                            <!-- === Token name === -->
-                            <span class="payment_option_name" t-esc="token.display_name"/>
-                            <!-- === "V" check mark === -->
-                            <t t-call="payment.verified_token_checkmark"/>
-                            <!-- === "Fees" badge === -->
-                            <span t-if="fees_by_provider.get(token.provider_id)"
-                                  class="badge rounded-pill text-bg-secondary ms-1">
-                                    + <t t-esc="fees_by_provider.get(token.provider_id)"
-                                         t-options="{'widget': 'monetary', 'display_currency': currency}"/>
-                                    Fees
-                            </span>
-                            <!-- === "Unpublished" badge === -->
-                            <span t-if="not token.provider_id.is_published" class="badge rounded-pill text-bg-danger ms-1">
-                                Unpublished
-                            </span>
-                        </label>
-                    </div>
-                    <!-- === Token inline form === -->
-                    <div t-attf-id="o_payment_token_inline_form_{{token.id}}"
-                         name="o_payment_inline_form"
-                         class="card-footer d-none">
-                        <t t-set="token_inline_form_xml_id"
-                           t-value="token.sudo().provider_id.token_inline_form_view_id.xml_id"/>
-                        <!-- === Inline form content (filled by provider) === -->
-                        <div t-if="token_inline_form_xml_id" class="clearfix">
-                            <t t-call="{{token_inline_form_xml_id}}">
-                                <t t-set="token" t-value="token"/>
-                            </t>
-                        </div>
-                    </div>
-                </t>
-            </div>
-        </xpath>
-    </template>
 </odoo>

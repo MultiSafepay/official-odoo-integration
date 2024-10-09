@@ -12,7 +12,7 @@
 # args-1 ==> client_limit_time : allow time for the customer to confirm payment (in minutes)
 # args-2 ==> max_days_retry : maximum days for a transaction not to be reprocessed (in days)
 # args-3 ==> states_to_process : states handled by the cron ['draft', 'pending', 'authorized', 'done', 'cancel', 'error']
-model._cron_update_transaction_state_from_msp(120, 4, ['draft', 'pending', 'authorized', 'error'])
+model._cron_update_transaction_state_from_msp(10, 4, ['draft', 'pending', 'authorized', 'error'])
         </field> <!-- Call the Python function -->
     </record>
 

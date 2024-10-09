@@ -1,65 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Payment icons -->
-    <record id="payment_icon_form_view_multisafepay" model="ir.ui.view">
-        <field name="name">payment.icon.form.view.multisafepay</field>
-        <field name="model">payment.icon</field>
-        <field name="inherit_id" ref="payment.payment_icon_form"/>
+    <!-- Payment methods -->
+    <record id="payment_method_form_view_multisafepay" model="ir.ui.view">
+        <field name="name">payment.method.form.view.multisafepay</field>
+        <field name="model">payment.method</field>
+        <field name="inherit_id" ref="payment.payment_method_form"/>
         <field name="arch" type="xml">
-            <xpath expr='//notebook' position='before'>
-                <group>
-                    <field name="title" attrs="{'invisible': [('provider', '!=', 'multisafepay')], 'readonly': [('is_generic_gateway', '=', False)]}"/>
-                    <field name="provider" readonly="1"/>
-                    <field name="is_credit_card" readonly="1"/>
-                    <field name="enabled" attrs="{'invisible': [('provider', '!=', 'multisafepay')]}"/>
-                    <field name="editable_min_amount" invisible="1"/>
-                    <field name="is_generic_gateway" invisible="1"/>
-                    <field name="requires_shopping_cart" attrs="{'invisible': ['|',('provider', '!=', 'multisafepay'),('is_generic_gateway', '!=', True)], 'readonly': [('is_generic_gateway', '=', False)]}"/>
-                    <field name="min_amount"
-                           attrs="{'invisible': [('provider', '!=', 'multisafepay')], 'readonly': [('editable_min_amount', '=', False)]}"/>
-                    <field name="editable_max_amount" invisible="1"/>
-                    <field name="max_amount"
-                           attrs="{'invisible': [('provider', '!=', 'multisafepay')], 'readonly': [('editable_max_amount', '=', False)]}"/>
-                    <field name="currency_ids" widget="many2many_tags"
-                           attrs="{'invisible': [('provider', '!=', 'multisafepay')]}"/>
-                    <field name="editable_country" invisible="1"/>
-                    <field name="country_ids" widget="many2many_tags"
-                           attrs="{'invisible': [('provider', '!=', 'multisafepay')], 'readonly': [('editable_country', '=', False)]}"/>
-                    <field name="customer_group" attrs="{'invisible': [('provider', '!=', 'multisafepay')]}"/>
-                </group>
-            </xpath>
-            <xpath expr='//notebook' position='attributes'>
-                <attribute name='invisible'>1</attribute>
-            </xpath>
-        </field>
-    </record>
-
-    <record model="ir.ui.view" id="payment_icon_tree_view">
-        <field name="name">payment.icon.tree</field>
-        <field name="model">payment.icon</field>
-        <field name="arch" type="xml">
-            <tree string="Payment methods">
-                <field name="name"/>
+            <field name="support_tokenization" position='before'>
                 <field name="title"/>
-                <field name="provider"/>
-                <field name="enabled" attrs="{'invisible': [('provider', '!=', 'multisafepay')]}"/>
-                <field name="min_amount" attrs="{'invisible': [('provider', '!=', 'multisafepay')]}"/>
-                <field name="max_amount" attrs="{'invisible': [('provider', '!=', 'multisafepay')]}"/>
-                <field name="currency_ids" widget="many2many_tags"
-                       attrs="{'invisible': [('provider', '!=', 'multisafepay')]}"/>
-                <field name="country_ids" widget="many2many_tags"
-                       attrs="{'invisible': [('provider', '!=', 'multisafepay')]}"/>
-                <field name="customer_group" attrs="{'invisible': [('provider', '!=', 'multisafepay')]}"/>
-            </tree>
+                <field name="provider" readonly="True"/>
+                <field name="is_credit_card" readonly="True"/>
+                <field name="editable_min_amount" invisible="True"/>
+                <field name="is_generic_gateway" invisible="True"/>
+                <field name="requires_shopping_cart" invisible="provider != 'multisafepay' or not is_generic_gateway" readonly="not is_generic_gateway"/>
+                <field name="min_amount" nvisible="provider != 'multisafepay'" readonly="not editable_min_amount"/>
+                <field name="editable_max_amount" invisible="1"/>
+                <field name="max_amount" invisible="provider != 'multisafepay'" readonly="not editable_max_amount"/>
+                <field name="customer_group" invisible="provider != 'multisafepay'"/>
+            </field>
         </field>
-    </record>
-
-    <record id="payment_methods_action" model="ir.actions.act_window">
-        <field name="name">MultiSafepay payment methods</field>
-        <field name="res_model">payment.icon</field>
-        <field name="view_id" ref="payment_icon_tree_view"/>
-        <field name="domain">[('provider','=','multisafepay')]</field>
     </record>
 
     <!-- Payment provider -->
@@ -68,52 +28,23 @@
         <field name="model">payment.provider</field>
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//sheet/field" position="before">
-                <div class="oe_button_box" name="button_box">
-                    <button class="btn" attrs="{'invisible': [('code', '!=', 'multisafepay')]}">
-                        <div style="padding:5px">
-                            <a href="https://docs.multisafepay.com/" class="oe_link" target="_blank">
-                                MultiSafepay Docs
-                            </a>
-                        </div>
-                    </button>
-                    <button class="btn" type="action"
-                            name="%(payment_multisafepay_official.payment_methods_action)d"
-                            attrs="{'invisible': [('code', '!=', 'multisafepay')]}">
-                        <div style="padding:5px">
-                            <span class="o_form_uri o_field_widget">Payment methods</span>
-                        </div>
-                    </button>
-                </div>
-            </xpath>
-            <xpath expr='//group[@name="provider_credentials"]' position='after'>
-                <group attrs="{'invisible': [('code', '!=', 'multisafepay')]}">
+            <group name="provider_credentials" position="inside">
+                <group invisible="code != 'multisafepay'">
                     <field name="multisafepay_api_key_live"
-                           attrs="{'required':[ ('code', '=', 'multisafepay'), ('state', '=', 'enabled')]}"/>
+                           required="code == 'multisafepay' and state == 'enabled'" password="True"/>
                     <field name="multisafepay_api_key_test"
-                           attrs="{'required':[ ('code', '=', 'multisafepay'), ('state', '=', 'test')]}"/>
+                           required="code == 'multisafepay' and state == 'test'" password="True"/>
                 </group>
-            </xpath>
-
-<!--            <xpath expr='//field[@name="payment_icon_ids"]' position='replace'/>-->
-
-<!--            <xpath expr='//group[@name="payment_followup"]' position='inside'>-->
-<!--                <field name="payment_icon_ids" widget="many2many_tags" colspan="4"-->
-<!--                       attrs="{'invisible': [('code', '=', 'multisafepay')]}"/>-->
-<!--            </xpath>-->
-
-            <xpath expr='//group[@name="payment_followup"]' position='after'>
-                <group string="Payment methods"
-                       name="payment_methods_button"
-                       attrs="{'invisible': ['|', ('code', '!=', 'multisafepay'), ('state', '=', 'disabled')]}">
-                    <button name="pull_merchant_payment_methods"
-                            string="Pull payment methods"
-                            class="btn btn-primary"
-                            help="Updates MultiSafepay payment methods."
-                            groups="base.group_system"
-                            type="object"/>
-                </group>
-            </xpath>
+            </group>
+            <a name="action_view_payment_methods" position="attributes">
+                <attribute name="invisible">state == 'disabled' or code == 'multisafepay'</attribute>
+            </a>
+            <a name="action_view_payment_methods" position="after">
+                <a type="object" name="pull_merchant_payment_methods" class="btn btn-link" role="button" invisible="state == 'disabled' or code != 'multisafepay'">
+                    <i class="oi oi-fw o_button_icon oi-arrow-right"/>
+                    Pull Payment Methods From MultiSafePay
+                </a>
+            </a>
         </field>
     </record>
 
@@ -123,24 +54,22 @@
         <field name="model">payment.transaction</field>
         <field name="inherit_id" ref="payment.payment_transaction_form"/>
         <field name="arch" type="xml">
-            <xpath expr='//field[@name="provider_reference"]' position='after'>
-                <label for="multisafepay_order_id"/>
-                <div>
-                    <field name="multisafepay_order_id"/>
-                </div>
-            </xpath>
-            <xpath expr='//field[@name="state"]' position='before'>
+            <field name="provider_reference" position='after'>
+                <field name="multisafepay_order_id"/>
+            </field>
+            <header position="inside">
                 <button name="update_order" class="btn btn-primary"
                         string="Update invoice ID"
-                        attrs="{'invisible': [('provider_code', '!=', 'multisafepay')]}"
+                        invisible="provider_code != 'multisafepay'"
                         groups="base.group_system"
                         type="object"/>
                 <button name="update_tx_from_msp" class="btn btn-primary"
                         string="Update state from MSP"
-                        attrs="{'invisible': [('provider_code', '!=', 'multisafepay')]}"
+                        invisible="provider_code != 'multisafepay'"
                         groups="base.group_system"
                         type="object"/>
-            </xpath>
+            </header>
         </field>
     </record>
+
 </odoo>

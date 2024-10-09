@@ -1,11 +1,11 @@
-from werkzeug import urls
-
 from odoo import models, fields, api, _
+from odoo import SUPERUSER_ID
 from odoo.exceptions import ValidationError
 import logging
 import psycopg2
 from datetime import datetime
 from dateutil import relativedelta
+from urllib.parse import quote
 
 _logger = logging.getLogger(__name__)
 
@@ -22,13 +22,13 @@ class MultiSafepayPaymentTransaction(models.Model):
 
         self.ensure_one()
 
-        # base_url = self.env["ir.config_parameter"].sudo().get_param("web.base.url")
         amount = values.get("amount")
         multisafepay_tx_values = dict(values)
-        # so_id = (values.get("reference")).replace("/", "_")
         multisafepay_tx_values.update(
             {
                 'tx_url': '/payment/multisafepay/init',
+                'sale_order_id': self.sale_order_ids[0].id if self.sale_order_ids else False,
+                'invoice_id': self.invoice_ids[0].id if self.invoice_ids else False,
                 'order_reference': values.get('reference'),
                 'currency': self.currency_id.name,
                 'amount': int(round(amount * 100)),
@@ -42,10 +42,10 @@ class MultiSafepayPaymentTransaction(models.Model):
                 'country': self.partner_country_id and self.partner_country_id.code or "",
                 'phone': self.partner_phone,
                 'email': self.partner_email,
-                # 'provider_id': self.env.context.get('provider_id', False),
-                'payment_method': self.env.context.get('payment_method', False),
+                'provider_id': self.provider_id.id,
+                'payment_method': self.payment_method_id.id,
                 'website': values.get('website', False),
-                'issuer_id': self.env.context.get('issuer', False),
+                # 'issuer_id': self.env.context.get('issuer', False),
                 'base_url': self.get_base_url(),
             }
         )
@@ -98,7 +98,7 @@ class MultiSafepayPaymentTransaction(models.Model):
         super()._process_notification_data(data)
         if self.provider_code != "multisafepay":
             return
-        reference = data.get("transactionid")
+        reference = quote(data.get("transactionid"), safe='')
 
         multisafepay_client = self.provider_id.get_multisafepay_client()
         order = multisafepay_client.order.get(reference)
@@ -113,11 +113,11 @@ class MultiSafepayPaymentTransaction(models.Model):
             error_message = order.get('error_info', 'Request failed')
             _logger.info(error_message)
             self.write({"state_message": error_message})
-            self._set_error("Multisafepay: " + _(error_message))
+            self.with_user(SUPERUSER_ID)._set_error("Multisafepay: " + _(error_message))
             return True
 
         if not order.get('data').get('order_id'):
-            self._set_canceled()
+            self.with_user(SUPERUSER_ID)._set_canceled()
             return True
 
         order_status = order.get('data').get('status', False)
@@ -127,18 +127,18 @@ class MultiSafepayPaymentTransaction(models.Model):
         })
 
         if order_status in ['void', 'declined', ] and data.get('type') == 'cancel':
-            self._set_canceled()
+            self.with_user(SUPERUSER_ID)._set_canceled()
             return True
 
         if order_status in ['completed', 'shipped']:
-            self._set_done()
+            self.with_user(SUPERUSER_ID)._set_done()
             return True
 
         if order_status in ['initialized', 'uncleared', ]:
-            self._set_pending()
+            self.with_user(SUPERUSER_ID)._set_pending()
             return True
 
-        self._set_error('Transaction status: ' + order_status)
+        self.with_user(SUPERUSER_ID)._set_error('Transaction status: ' + order_status)
         return True
 
     def update_order(self):
@@ -231,7 +231,8 @@ class StockPicking(models.Model):
         super(StockPicking, self).send_to_shipper()
 
         order = self.env['sale.order'].sudo().search([('name', 'ilike', self.origin)], limit=1)
-        multisafepay_transactions = list(filter(lambda tx: tx.provider_code == 'multisafepay', order.transaction_ids))
+        multisafepay_transactions = list(
+            filter(lambda tx: tx.provider_code == 'multisafepay', order.transaction_ids))
         if not multisafepay_transactions:
             return
 

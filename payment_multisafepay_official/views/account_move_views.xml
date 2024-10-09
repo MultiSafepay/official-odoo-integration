@@ -11,11 +11,11 @@
                         class="btn btn-primary"
                         string="Refund with MultiSafepay"
                         type="object"
-                        attrs="{'invisible' : [('can_be_refund_with_multisafepay', '=', False)]}"/>
+                        invisible="not can_be_refund_with_multisafepay"/>
             </header>
-            <xpath expr='//group[@id="header_right_group"]' position='inside'>
+            <group id="header_right_group" position='inside'>
                 <field name="multisafepay_refund_id" readonly="1"/>
-            </xpath>
+            </group>
         </field>
     </record>
 </odoo>

@@ -2,7 +2,8 @@ from odoo import models, fields
 from odoo.exceptions import UserError
 import logging
 import pprint
-from .payment_icon import E_INVOICING_PAYMENT_METHOD, PAY_AFTER_DELIVERY_PAYMENT_METHOD
+
+from ..const import E_INVOICING_PAYMENT_METHOD, PAY_AFTER_DELIVERY_PAYMENT_METHOD
 
 _logger = logging.getLogger(__name__)
 

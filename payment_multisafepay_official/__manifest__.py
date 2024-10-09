@@ -16,13 +16,11 @@
     'license': 'Other OSI approved licence',
 
     # Categories can be used to filter modules in modules listing
-    # Check https://github.com/odoo/odoo/blob/13.0/odoo/addons/base/data/ir_module_category_data.xml
-    # for the full list
     'category': 'eCommerce',
-    'version': '16.0.1.1.4',
+    'version': '17.0.0.0.4',
 
     # any module necessary for this one to work correctly
-    'depends': ['payment', 'sale', 'delivery'],
+    'depends': ['payment', 'sale', 'delivery', 'stock'],
     'external_dependencies': {'python': ['multisafepay']},
 
     # always loaded
@@ -32,19 +30,12 @@
         'views/payment_templates.xml',
         'views/account_move_views.xml',
         'data/payment_provider.xml',
-        'data/payment_icon.xml',
-        'data/payment_method.xml',
         'data/ir_cron.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
         'demo/demo.xml',
     ],
-    'assets': {
-        'web.assets_frontend': [
-            'payment_multisafepay_official/static/src/js/payment_multisafepay.js',
-        ]
-    },
     'images': ['static/description/main.png'],
     'installable': True,
     'post_init_hook': 'post_init_hook',
